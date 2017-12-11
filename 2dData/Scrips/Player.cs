@@ -15,6 +15,28 @@ public class Player : MonoBehaviour {
 
     private bool facingRight=true;
 
+    [SerializeField]
+    private Transform[] groundPoints;
+
+    [SerializeField]
+    private float groundRadius;
+
+    [SerializeField]
+    private LayerMask whatIsGround;
+
+    private bool isGrounded;
+
+    private bool jump;
+
+    [SerializeField]
+    private bool airControl;
+
+    [SerializeField]
+    private float jumpForce;
+
+
+
+
 	void Start () {
 
         mageRigidbody = GetComponent<Rigidbody2D>();  // reference to the given gravity to the player.
@@ -33,7 +55,8 @@ public class Player : MonoBehaviour {
     void FixedUpdate () {
 
         float horizontal = Input.GetAxis("Horizontal"); //movement on a horizontal plane.
-       
+
+        isGrounded = IsGrounded();
 
         MageMovement(horizontal);   // calling the movement of the player either to left or right.
 
@@ -45,9 +68,14 @@ public class Player : MonoBehaviour {
 	}
     private void MageMovement(float horizontal)
     {
-        if (!this.mageAnimation.GetCurrentAnimatorStateInfo(0).IsTag("attack"))
+        if (!this.mageAnimation.GetCurrentAnimatorStateInfo(0).IsTag("attack") && (isGrounded || airControl))
         {
            mageRigidbody.velocity = new Vector2(horizontal * mageSpeed, mageRigidbody.velocity.y); // movement for the mage on x = -1, y = 0
+        }
+        if (isGrounded && jump)
+        {
+           isGrounded = false;
+           mageRigidbody.AddForce(new Vector2(0, jumpForce));
         }
        
 
@@ -70,6 +98,10 @@ public class Player : MonoBehaviour {
         {
             attack = true;
         }
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            jump = true;
+        }
     }
 
     private void Flip(float horizontal)  //reference to where the player will face when is walking.
@@ -89,5 +121,31 @@ public class Player : MonoBehaviour {
     private void Reset()  //resets the values from one animation to other 
     {
         attack = false;
+        jump = false;
+    
     }
+
+    private bool IsGrounded() {
+
+
+        if (mageRigidbody.velocity.y <= 0)
+        {
+            foreach (Transform point in groundPoints)
+            {
+                Collider2D[] colliders = Physics2D.OverlapCircleAll(point.position, groundRadius, whatIsGround);
+                
+                for (int i = 0; i< colliders.Length; i++)
+                {
+                    if (colliders[i].gameObject != gameObject)
+                    {
+                        return true;
+                    }
+                }
+               
+            }
+        }
+        return false;    
+   }
+
+
 }
