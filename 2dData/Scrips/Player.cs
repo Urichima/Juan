@@ -28,6 +28,8 @@ public class Player : MonoBehaviour {
 
     private bool jump;
 
+
+
     [SerializeField]
     private bool airControl;
 
@@ -64,11 +66,17 @@ public class Player : MonoBehaviour {
 
         MageAttacks();
 
+        HandleLayers();
+
         Reset();
 	}
     private void MageMovement(float horizontal)
     {
-        if (!this.mageAnimation.GetCurrentAnimatorStateInfo(0).IsTag("attack") && (isGrounded || airControl))
+        if (mageRigidbody.velocity.y < 0)
+        {
+            mageAnimation.SetBool("land", true);
+        }
+        if (!mageAnimation.GetCurrentAnimatorStateInfo(0).IsTag("attack") && (isGrounded || airControl))
         {
            mageRigidbody.velocity = new Vector2(horizontal * mageSpeed, mageRigidbody.velocity.y); // movement for the mage on x = -1, y = 0
         }
@@ -76,6 +84,7 @@ public class Player : MonoBehaviour {
         {
            isGrounded = false;
            mageRigidbody.AddForce(new Vector2(0, jumpForce));
+            mageAnimation.SetTrigger("jump");
         }
        
 
@@ -122,6 +131,7 @@ public class Player : MonoBehaviour {
     {
         attack = false;
         jump = false;
+        
     
     }
 
@@ -138,6 +148,8 @@ public class Player : MonoBehaviour {
                 {
                     if (colliders[i].gameObject != gameObject)
                     {
+                        mageAnimation.ResetTrigger("jump");
+                        mageAnimation.SetBool("land", false);
                         return true;
                     }
                 }
@@ -147,5 +159,16 @@ public class Player : MonoBehaviour {
         return false;    
    }
 
+    private void HandleLayers()
+    {
+        if (isGrounded)
+        {
+            mageAnimation.SetLayerWeight(1, 1);
+        }
+        else
+        {
+            mageAnimation.SetLayerWeight(1, 0);
+        }
+    }
 
 }
